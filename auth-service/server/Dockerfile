@@ -9,5 +9,5 @@ FROM alpine:latest
 LABEL maintainer="hexo-shikanon-blog <shikanon@tensorbytes.com>"
 
 COPY --from=build /app /app
-EXPOSE 8000
+EXPOSE 8080
 CMD ["/app/server"]
