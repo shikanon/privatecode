@@ -16,7 +16,7 @@ RUN  apt-get update \
      && chmod +x /usr/sbin/wait-for-it.sh
 
 # Install Puppeteer under /node_modules so it's available system-wide
-RUN npm i puppeteer koa -g 
+RUN npm i puppeteer koa -g  --unsafe-perm=true  --allow-root
 
 COPY . /app
 WORKDIR /app
