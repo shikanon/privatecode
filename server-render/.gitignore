@@ -1,0 +1,17 @@
+/node_modules/
+/.local-chromium/
+/.local-firefox/
+/.dev_profile*
+.DS_Store
+*.swp
+*.pyc
+.vscode
+package-lock.json
+yarn.lock
+/node6
+/utils/browser/puppeteer-web.js
+/lib
+test/coverage.json
+temp/
+dependency-chart.png
+puppeteer-core-*.tgz
