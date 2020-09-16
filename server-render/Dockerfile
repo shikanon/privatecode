@@ -15,11 +15,10 @@ RUN  apt-get update \
      && wget --quiet https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh -O /usr/sbin/wait-for-it.sh \
      && chmod +x /usr/sbin/wait-for-it.sh
 
-# Install Puppeteer under /node_modules so it's available system-wide
-RUN npm i puppeteer koa -g  --unsafe-perm=true  --allow-root
-
 COPY . /app
 WORKDIR /app
+# Install Puppeteer under /node_modules so it's available system-wide
+RUN npm i puppeteer koa
 
 EXPOSE 8000
 
