@@ -17,51 +17,55 @@ let WSE_LIST = [];
 })();
 
 app.use(async ctx =>{
-  console.log(ctx.url);
+  let ua = ctx.header["user-agent"]
   let time1 = new Date().getTime();
-  let url = 'https://developer.orbbec.com.cn' + ctx.url
+  let url = 'http://120.78.80.128' + ctx.url
   console.log(url);
+  console.log(ctx.header);
+  console.log(ua)
+  if (ua.search('[sS]pider') == -1){
+    // 将非spider的请求转发到原地址
+    ctx.response.redirect('http://developer.orbbec.com.cn' + ctx.url); 
+  }else{
+    // 恢复节点
+    let browserWSEndpoint = WSE_LIST[0]
+    console.log(browserWSEndpoint)
+    const browser = await puppeteer.connect({browserWSEndpoint});
+    
+    // 开启新的标签页
+    let page = await browser.newPage();
+    await page.setJavaScriptEnabled(true);
+    // 由于只关心渲染后的dom树，所以对css，font，image等都做了屏蔽
+    await page.setRequestInterception(true); 
+    page.on('request', (req) => {
+      if(req.resourceType() == 'stylesheet' || req.resourceType() == 'font' || req.resourceType() == 'image'){
+              req.abort();
+          }
+          else {
+              req.continue();
+          }
+      });
 
-  // 恢复节点
-  let browserWSEndpoint = WSE_LIST[0]
-  console.log(browserWSEndpoint)
-  const browser = await puppeteer.connect({browserWSEndpoint});
-  
-  // 开启新的标签页
-  let page = await browser.newPage();
-  await page.setJavaScriptEnabled(true);
-  // 由于只关心渲染后的dom树，所以对css，font，image等都做了屏蔽
-  await page.setRequestInterception(true); 
-  page.on('request', (req) => {
-    if(req.resourceType() == 'stylesheet' || req.resourceType() == 'font' || req.resourceType() == 'image'){
-            req.abort();
-        }
-        else {
-            req.continue();
-        }
-    });
+    // waitUntil 主要包括四个值，'load','domcontentloaded','networkidle2','networkidle0'
+    // 分别表示在xx之后才确定为跳转完成
+    // load - 页面的load事件触发时
+    // domcontentloaded - 页面的 DOMContentLoaded 事件触发时
+    // networkidle2 - 只有2个网络连接时触发（至少500毫秒后）
+    // networkidle0 - 不再有网络连接时触发（至少500毫秒后）
+    await page.goto(url, { waitUntil: ['load','domcontentloaded','networkidle2'] });
 
+    ctx.body = await page.content();
+    // 关闭标签页
+    await page.close();
 
-  // waitUntil 主要包括四个值，'load','domcontentloaded','networkidle2','networkidle0'
-  // 分别表示在xx之后才确定为跳转完成
-  // load - 页面的load事件触发时
-  // domcontentloaded - 页面的 DOMContentLoaded 事件触发时
-  // networkidle2 - 只有2个网络连接时触发（至少500毫秒后）
-  // networkidle0 - 不再有网络连接时触发（至少500毫秒后）
-  await page.goto(url, { waitUntil: ['load','domcontentloaded','networkidle2'] });
-
-  ctx.body = await page.content();
-  // 关闭标签页
-  await page.close();
-
-  // 断开连接
-  await browser.disconnect();
+    // 断开连接
+    await browser.disconnect();
+  }
   
   let time2 = new Date().getTime();
   console.log((time2-time1)/1000)
   console.log("finish");
-  // 关闭浏览器
-  // await browser.close();
+
 });
 
 app.listen(8000);
