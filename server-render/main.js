@@ -1,7 +1,8 @@
 // 导入包
 const puppeteer = require('puppeteer');
-
 const Koa = require('koa');
+const request = require('request');
+
 const app = new Koa();
 
 // 存储browserWSEndpoint列表
@@ -16,6 +17,21 @@ let WSE_LIST = [];
   WSE_LIST = [browserWSEndpoint]
 })();
 
+// 对 request 方法进行封装
+function getRequest(url, method, header) {
+  return new Promise((resolve, reject) => {
+    request({url:url, method:method, header:header },
+      function(error, response, body){
+        // 可以成功打印，但ctx最终没继续执行
+        console.log('进来了',response.headers)
+        resolve(response)
+      }
+      )
+  })
+}
+
+
+
 app.use(async ctx =>{
   let ua = ctx.header["user-agent"]
   let time1 = new Date().getTime();
@@ -24,8 +40,11 @@ app.use(async ctx =>{
   console.log(ctx.header);
   console.log(ua)
   if (ua.search('[sS]pider') == -1){
-    // 将非spider的请求转发到原地址
-    ctx.response.redirect('http://developer.orbbec.com.cn' + ctx.url); 
+    // 将非spider的请求直接转发到原地址
+    let resp = await getRequest(url, ctx.method, ctx.header);
+    ctx.response.body = resp.body;
+    ctx.response.set(resp.headers);
+    ctx.response.status = resp.statusCode;
   }else{
     // 恢复节点
     let browserWSEndpoint = WSE_LIST[0]
@@ -52,7 +71,7 @@ app.use(async ctx =>{
     // domcontentloaded - 页面的 DOMContentLoaded 事件触发时
     // networkidle2 - 只有2个网络连接时触发（至少500毫秒后）
     // networkidle0 - 不再有网络连接时触发（至少500毫秒后）
-    await page.goto(url, { waitUntil: ['load','domcontentloaded','networkidle2'] });
+    await page.goto(url, { waitUntil: ['load','domcontentloaded','networkidle2']});
 
     ctx.body = await page.content();
     // 关闭标签页
@@ -63,8 +82,7 @@ app.use(async ctx =>{
   }
   
   let time2 = new Date().getTime();
-  console.log((time2-time1)/1000)
-  console.log("finish");
+  console.log("finish time:",(time2-time1)/1000)
 
 });
 
