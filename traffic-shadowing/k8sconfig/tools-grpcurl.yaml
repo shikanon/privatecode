@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: tools-grpcurl
+  name: tools-grpcurl
+spec:
+  selector:
+    matchLabels:
+      app: tools-grpcurl
+  template:
+    metadata:
+      labels:
+        app: tools-grpcurl
+    spec:
+      containers:
+      - image: swr.cn-north-4.myhuaweicloud.com/hw-zt-k8s-images/tools-grpcurl
+        imagePullPolicy: Always
+        name: tools-grpcurl
+        resources:
+          limits:
+            cpu: 50m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 128Mi
+      imagePullSecrets:
+        - name: regcred

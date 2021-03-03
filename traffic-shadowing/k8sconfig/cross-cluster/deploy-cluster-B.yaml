@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: grpc-hello-world-cluster-b
+  name: grpc-hello-world-cluster-b
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: grpc-hello-world-cluster-b
+      app.kubernetes.io/name: grpc-hello-world
+      version: cluster-b
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: grpc-hello-world-cluster-b
+        app.kubernetes.io/name: grpc-hello-world
+        version: cluster-b
+    spec:
+      containers:
+      - image: docker.io/shikanon096/grpc-helloworld
+        imagePullPolicy: Always
+        name: grpc-hello-world
+        ports:
+        - containerPort: 8000
+        resources:
+          limits:
+            cpu: 50m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 128Mi
+        env:
+          - name: PODNAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: PODIP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP

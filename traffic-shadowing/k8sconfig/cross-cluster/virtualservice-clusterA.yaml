@@ -1,0 +1,37 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: grpc-hello-world
+spec:
+  gateways:
+  - istio-system/internal-gateway
+  hosts:
+    - 'grpc-hello-shikanon.cn-bj.rcmd-staging.skyengine.net.cn'
+  http:
+  - route:
+    - destination:
+        host: grpc-hello-world.default.svc.cluster.local
+        port:
+          number: 8000
+    mirror:
+      host: grpc-hello-mirror.cn-bj.rcmd-testing.skyengine.net.cn
+      port:
+        number: 8000
+    mirror_percent: 100
+---
+
+# 对外host需要设置成外部DNS解析
+# grpc-hello-mirror.cn-bj.rcmd-testing.skyengine.net.cn 会被解析到第二个集群
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: httpbin-cluster-b
+spec:
+  hosts:
+  - grpc-hello-mirror.cn-bj.rcmd-testing.skyengine.net.cn
+  location: MESH_EXTERNAL
+  ports:
+  - number: 8000
+    name: http80
+    protocol: HTTP
+  resolution: DNS

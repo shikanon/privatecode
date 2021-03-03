@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"os"
@@ -21,10 +22,21 @@ type server struct {
 	pb.UnimplementedGreeterServer
 }
 
+type Pod struct {
+	name string
+	ip   string
+}
+
+var pod = &Pod{
+	name: os.Getenv("PODNAME"),
+	ip:   os.Getenv("PODIP"),
+}
+
 // SayHello implements helloworld.GreeterServer
 func (s *server) SayHello(ctx context.Context, in *pb.HelloRequest) (*pb.HelloReply, error) {
-	log.Printf("Received: %v", in.GetName())
-	return &pb.HelloReply{Message: "Hello " + in.GetName()}, nil
+	m := fmt.Sprintf("Hello %s ! \n Pod name is %s \n; Pod IP is %s \n;", in.GetName(), pod.name, pod.ip)
+	log.Printf("Received: %v", m)
+	return &pb.HelloReply{Message: m}, nil
 }
 
 func main() {

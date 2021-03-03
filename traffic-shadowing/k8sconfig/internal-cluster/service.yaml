@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: grpc-hello-world
+  name: grpc-hello-world
+  namespace: default
+spec:
+  ports:
+  - name: grpc
+    port: 8000
+    targetPort: 8000
+  selector:
+    app.kubernetes.io/name: grpc-hello-world
+  type: ClusterIP
