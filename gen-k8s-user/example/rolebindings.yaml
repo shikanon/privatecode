@@ -1,0 +1,47 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    app: rcmd
+    groups: rcmd
+  name: rcmd-dev
+  namespace: default
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - secrets
+  - endpoints
+  - configmaps
+  - pods/log
+  verbs:
+  - create
+  - get
+  - watch
+  - list
+- apiGroups:
+  - '*'
+  - apps
+  - extensions
+  resources:
+  - horizontalpodautoscalers
+  - deployments
+  - statefulsets
+  - jobs
+  - cronjobs
+  - services
+  verbs:
+  - create
+  - get
+  - watch
+  - list
+- apiGroups:
+  - '*'
+  resources:
+  - node
+  - replicasets
+  verbs:
+  - list
+  - get
+  - watch
