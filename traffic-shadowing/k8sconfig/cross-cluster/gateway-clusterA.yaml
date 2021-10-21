@@ -1,0 +1,21 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: grpc-helloworld-cluster-a
+  namespace: default
+spec:
+  gateways:
+  - istio-system/internal-gateway
+  hosts:
+  - helloworld.cn-bj.rcmd-staging.skyengine.net.cn
+  http:
+  - route:
+    - destination:
+        host: grpc-hello-world.default.svc.cluster.local
+        port:
+          number: 8000
+    mirror:
+        host: grpc-hello-world.cn-bj.rcmd-testing.skyengine.net.cn
+        port:
+          number: 8000
+    mirror_percent: 100  

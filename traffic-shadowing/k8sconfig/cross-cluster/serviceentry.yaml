@@ -1,0 +1,13 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: grpc-hello-world-ext
+spec:
+  hosts:
+  - grpc-hello-world.cn-bj.rcmd-testing.skyengine.net.cn
+  ports:
+  - number: 8000
+    name: http8000
+    protocol: TCP
+  resolution: DNS
+  location: MESH_EXTERNAL

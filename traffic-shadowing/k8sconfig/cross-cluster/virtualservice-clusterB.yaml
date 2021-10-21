@@ -1,0 +1,18 @@
+# 这里的hosts要用 xxxx-shadow，因为这个hosts是被mirror镜像过来的
+# 而不是 grpc-hello-mirror.cn-bj.rcmd-testing.skyengine.net.cn
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: grpc-hello-world-clusterb
+  namespace: default
+spec:
+  gateways:
+  - istio-system/internal-gateway
+  hosts:
+  - grpc-hello-shikanon.cn-bj.rcmd-staging.skyengine.net.cn-shadow
+  http:
+  - route:
+    - destination:
+        host: grpc-hello-world.default.svc.cluster.local
+        port:
+          number: 8000

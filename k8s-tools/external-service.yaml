@@ -1,0 +1,8 @@
+Address:
+- name: mongo-zt-recall-etl
+  ip: 10.11.11.11,10.213.60.83
+  ports: 8635
+CName:
+- name: mysql-zt-rcmd
+  external-name: test.internal.cn-north-4.mysql.rds.myhuaweicloud.com
+  ports: 3306
