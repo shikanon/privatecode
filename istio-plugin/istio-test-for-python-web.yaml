@@ -1,0 +1,128 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: istio-test-for-python-web
+  name: istio-test-for-python-web
+  namespace: rcmd-tt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: istio-test-for-python-web
+  template:
+    metadata:
+      labels:
+        app: istio-test-for-python-web
+    spec:
+      containers:
+      - image: registry.cn-beijing.aliyuncs.com/shikanon/python-web-test:v0.03
+        imagePullPolicy: Always
+        name: test
+        ports:
+        - containerPort: 80
+          name: http-80
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /app
+          name: istio-test-script
+      volumes:
+      - configMap:
+          defaultMode: 0720
+          name: istio-test-script
+        name: istio-test-script
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: istio-test-for-python-web
+  name: istio-test-for-python-web
+  namespace: rcmd-tt
+spec:
+  ports:
+  - name: http-80
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: istio-test-for-python-web
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: python-web-v1
+  name: python-web-v1
+  namespace: rcmd-tt
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: python-web-v1
+  template:
+    metadata:
+      labels:
+        app: python-web-v1
+    spec:
+      containers:
+      - image: registry.cn-beijing.aliyuncs.com/shikanon/python-web-test:v0.03
+        imagePullPolicy: Always
+        name: test
+        ports:
+        - containerPort: 80
+          name: http-80
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /app
+          name: istio-test-script
+      volumes:
+      - configMap:
+          defaultMode: 0720
+          name: istio-test-script
+        name: istio-test-script
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: python-web-v1
+  name: python-web-v1
+  namespace: rcmd-tt
+spec:
+  ports:
+  - name: http-80
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    app: python-web-v1
+
+---
+apiVersion: v1
+data:
+  main.py: |
+    from fastapi import FastAPI,Request
+    app = FastAPI()
+    @app.get("/")
+    def read_root(request: Request):
+        host = request.headers.get('host')
+        print(host)
+        authority = request.headers.get('authority')
+        print(authority)
+        return {"message": "Hello World", "host": host, "authority": authority}
+
+    @app.get("/{version}")
+    def read_root(request: Request,version: str):
+        host = request.headers.get('host')
+        print(host)
+        authority = request.headers.get('authority')
+        print(authority)
+        print(version)
+        return {"message": "get the version api", "version": version, "host": host, "authority": authority}
+kind: ConfigMap
+metadata:
+  name: istio-test-script
+  namespace: rcmd-tt
