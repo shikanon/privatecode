@@ -1,0 +1,68 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: EnvoyFilter
+metadata:
+  name: example-istio-lua
+  namespace: rcmd-tt
+spec:
+  workloadSelector:
+    labels:
+      app: python-web-v1
+  configPatches:
+    # The first patch adds the lua filter to the listener/http connection manager
+  - applyTo: HTTP_FILTER
+    match:
+      context: SIDECAR_INBOUND #"ANY", "SIDECAR_INBOUND", "SIDECAR_OUTBOUND", "GATEWAY"
+      listener:
+        portNumber: 80
+        filterChain:
+          filter:
+            name: "envoy.filters.network.http_connection_manager"
+            subFilter:
+              name: "envoy.filters.http.router"
+    patch:
+      operation: INSERT_BEFORE
+      value: # lua filter specification
+       name: envoy.lua
+       typed_config:
+          "@type": "type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua"
+          inlineCode: |
+            function envoy_on_request(request_handle)
+              -- Make an HTTP call to an upstream host with the following headers, body, and timeout.
+              local headers, body = request_handle:httpCall(
+               "istio-plugin-example",
+               {
+                [":method"] = "GET",
+                [":path"] = "/send-the-next-server",
+                [":authority"] = "istio-test-for-python-web",
+                [":host"] = "istio-test-for-python-web"
+               },
+              "",
+              1000)
+              request_handle:logWarn("requests")
+            end
+            function envoy_on_response(response_handle)
+              response_handle:headers():add("mytag", "hello-world-girl")
+              response_handle:logWarn("response")
+            end
+  # The second patch adds the cluster that is referenced by the lua code
+  # cds match is omitted as a new cluster is being added
+  - applyTo: CLUSTER
+    match:
+      context: SIDECAR_OUTBOUND
+    patch:
+      operation: ADD
+      value: # cluster specification
+        name: "istio-plugin-example"
+        type: STRICT_DNS
+        connect_timeout: 0.5s
+        lb_policy: ROUND_ROBIN
+        load_assignment:
+          cluster_name: istio-plugin-example
+          endpoints:
+          - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    protocol: TCP
+                    address: "istio-test-for-python-web.rcmd-tt.svc.cluster.local" # 自定义的一个下游服务
+                    port_value: 80
